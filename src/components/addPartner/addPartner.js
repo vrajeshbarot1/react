@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState ,useEffect } from 'react';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -8,55 +8,72 @@ import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import * as Element from "./style";
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Paper from '@mui/material/Paper';
 import Snackbar from '@mui/material/Snackbar';
 import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
-import Tooltip from '@mui/material/Tooltip';
+import PartnerTable from '../PartnerTable/PartnerTable';
 
 const theme = createTheme();
 
 const Addpartner = () => {
-    const[uname,setName] = useState();
-    const[udesc,setDesc] = useState();
-    const[udata,setUser] = useState([]);
+
+    // GET initial or local storage Data
+
+    const localData=() => { 
+        const data = localStorage.getItem('users');
+        if(data) {
+            return JSON.parse(data);
+        } else {
+            return [];
+        }
+    }
+
+    const[name,setName] = useState('');
+    const[username,setUsername] = useState('');
+    const[user,setUser] = useState(localData());
     // snackbar
     const[snackbarData,setsnackbarData] = useState([]);
     const[snackbaropen, snackbarsetOpen] = useState(false);
     // edit State
     const[btnSubmit,setbtnSubmit] = useState(true);
     const[editIndex,setEditIndex] = useState(true);
+
+    if(!localStorage.getItem('users')) {
+        fetch("https://jsonplaceholder.typicode.com/users")
+        .then((response) => response.json())
+        .then((json) => {
+            setUser(json);
+        });
+    }
+
+
+    useEffect(() => {
+        localStorage.setItem('users', JSON.stringify(user));
+    }, [user]);
+
     const addNew = () => {
-        if(!uname == '' && !udesc == '' && btnSubmit == true) {
+        if(!name == '' && !username == '' && btnSubmit == true) {
             snackbarsetOpen(true);
             setsnackbarData({
                 message:"data added",
                 varient:"success"
             });
-            setUser([...udata,{
-                uname:uname,
-                udesc:udesc
+            setUser([...user,{
+                username:name,
+                name:username
             }]);   
             setName('');
-            setDesc('');
-        } else if(!uname == '' && !udesc == '' && btnSubmit == false) {
-            let newArr = [...udata];
+            setUsername('');
+        } else if(!name == '' && !username == '' && btnSubmit == false) {
+            let newArr = [...user];
             newArr[editIndex] = {
-                uname:uname,
-                udesc:udesc
+                name:name,
+                username:username
             }
             setUser(newArr); 
             setbtnSubmit(true);
             setName('');
-            setDesc('');
+            setUsername('');
         } else {
             snackbarsetOpen(true);
             setsnackbarData({
@@ -72,20 +89,20 @@ const Addpartner = () => {
     //     setUser([]);
     // }
     const editPartner = (index) => {
-        console.log(udata[index]);
-        setName(udata[index].uname);
-        setDesc(udata[index].udesc);
+        console.log(user[index]);
+        setName(user[index].name);
+        setUsername(user[index].username);
         setbtnSubmit(false);
         setEditIndex(index);
     }
     const deletePartner = (delindex) => {
         console.log('111111111111',delindex);
-        const newArr = udata.filter((currelem,index) => {
+        const newArr = user.filter((currelem,index) => {
             return index !== delindex;
         });
         setUser(newArr); 
     }
-    const handleClose = (event: React.SyntheticEvent | Event, reason?: string) => {
+    const handleClose = (event, reason) => {
         if (reason === 'clickaway') {
           return;
         }
@@ -137,7 +154,7 @@ const Addpartner = () => {
                                     name="partner Name"
                                     autoComplete="partner Name"
                                     autoFocus
-                                    value={uname}
+                                    value={name}
                                     onChange= {(e) => setName(e.target.value)}
                                     />
                                     <TextField
@@ -149,8 +166,8 @@ const Addpartner = () => {
                                     description="partner Description"
                                     autoComplete="partner Description"
                                     autoFocus
-                                    value={udesc}
-                                    onChange= {(e) => setDesc(e.target.value)}
+                                    value={username}
+                                    onChange= {(e) => setUsername(e.target.value)}
                                     />
                                     {
                                         btnSubmit ? 
@@ -185,48 +202,7 @@ const Addpartner = () => {
                     </Container>
                 </ThemeProvider>
             </Element.Form>
-            <Element.Data>
-                <TableContainer component={Paper}>
-                    <Table sx={{ minWidth: 650 }} aria-label="simple table">
-                        <TableHead>
-                        <TableRow>
-                            <TableCell>index</TableCell>
-                            <TableCell>Partner</TableCell>
-                            <TableCell align="right">Partner Description</TableCell>
-                            <TableCell align="right">Action</TableCell>
-                        </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {udata.map((row,index) => (
-                                <TableRow
-                                key={index}
-                                sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-                                >
-                                <TableCell component="th" scope="row">
-                                    {index+1 }
-                                </TableCell>
-                                <TableCell component="th" scope="row">
-                                    {row.uname}
-                                </TableCell>
-                                <TableCell align="right">{row.udesc}</TableCell>
-                                <TableCell align="right">
-                                    <Tooltip title="edit" >
-                                        <IconButton aria-label="edit" size="large" color="secondary" onClick={() => editPartner(index)}>
-                                            <EditIcon />
-                                        </IconButton>
-                                    </Tooltip>
-                                    <Tooltip title="Delete" >
-                                        <IconButton aria-label="delete" size="large" color="error"  onClick={() => deletePartner(index)}>
-                                            <DeleteIcon />
-                                        </IconButton>
-                                    </Tooltip>
-                                </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-            </Element.Data>
+            <PartnerTable user={user} deletePartner={deletePartner} editPartner={editPartner} />
         </>
     );
 }

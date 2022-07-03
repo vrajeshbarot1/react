@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-export const Slider = styled.div`
+export const Data = styled.div`
     max-width: 1200px;
     margin: 0 auto;
     margin-top: 100px;
